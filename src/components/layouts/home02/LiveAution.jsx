@@ -4,7 +4,6 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Scrollbar, A11y , Grid } from 'swiper';
 import Countdown from "react-countdown";
 
-
 const LiveAution = props => {
     const data = props.data;
   return (

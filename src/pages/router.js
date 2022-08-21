@@ -1,7 +1,7 @@
 import Home02 from "./Home02";
 import Explore02 from './Explore02'
 import ItemDetails from './ItemDetails'
-import ConnectWallet from './ConnectWallet'
+import ConnectWallet from './Bid'
 import CreateItem from './CreateItem'
 
 const routes = [

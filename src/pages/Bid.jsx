@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 import Header from '../components/header/Header';
-import WalletConnect from '../components/layouts/WalletConnect';
+import WalletConnect from '../components/layouts/Bid';
 import Footer from '../components/footer/Footer';
 
 const ConnectWallet = () => {
