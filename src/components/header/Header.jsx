@@ -7,9 +7,20 @@ import logolight2x from '../../assets/images/logo/logo@2x.png'
 import menus from "../../pages/menu";
 import DarkMode from "./DarkMode"
 
+import { sequence } from '0xsequence';
+import { ETHAuth, Proof } from '@0xsequence/ethauth'
+
 import icon from '../../assets/images/icon/connect-wallet.svg'
+import { Button } from 'react-bootstrap';
+
+const walletAppURL = 'https://sequence.app';
+const network = 'polygon';
+sequence.initWallet(network, { walletAppURL });
 
 const Header = () => {
+
+    const [buttonText, setButtonText] = useState("Connect Wallet");
+
     const { pathname } = useLocation();
     const headerRef = useRef (null)
     useEffect(() => {
@@ -39,6 +50,66 @@ const Header = () => {
     const handleOnClick = index => {
         setActiveIndex(index); 
     };
+
+    
+    const wallet = sequence.getWallet()
+
+    const walletActions = async () => {
+        const wallet = sequence.getWallet();
+        if(wallet.isConnected()) {
+            openWallet();
+            setButtonText("Open Wallet");
+        }else{
+            connect(true);
+        }
+    }
+
+    const connect = async (authorize: boolean = false) => {
+        const wallet = sequence.getWallet()
+
+        const connectDetails = await wallet.connect({
+        app: 'Demo Dapp',
+        authorize,
+        })
+
+        console.warn('connectDetails', { connectDetails })
+
+        if (authorize) {
+        const ethAuth = new ETHAuth()
+
+        if (connectDetails.proof) {
+            const decodedProof = await ethAuth.decodeProof(connectDetails.proof.proofString, true)
+
+            console.warn({ decodedProof })
+
+            const isValid = await wallet.utils.isValidTypedDataSignature(
+            await wallet.getAddress(),
+            connectDetails.proof.typedData,
+            decodedProof.signature,
+            await wallet.getAuthChainId()
+            )
+            console.log('isValid?', isValid)
+            if (!isValid) throw new Error('sig invalid')
+
+            setButtonText("Open Wallet");
+        }
+        }
+        
+    }
+
+    const disconnect = () => {
+        const wallet = sequence.getWallet()
+        wallet.disconnect()
+
+        setButtonText("Connect Wallet");
+    }
+
+    const openWallet = () => {
+        const wallet = sequence.getWallet()
+        wallet.openWallet()
+    }
+
+    
 
     return <div>
       <header id="header_main" className="header_1 js-header" ref={headerRef}>
@@ -80,10 +151,10 @@ const Header = () => {
                                 </ul>
                             </nav>
                             <div className="button-connect-wallet">
-                                <Link to="/connect-wallet" className="sc-button wallet  style-2">
+                                <Button onClick={() => walletActions()} className="sc-button wallet  style-2">
                                     <img src={icon} alt="icon" />
-                                    <span>Connect Wallet</span>
-                                </Link>
+                                    <span>{buttonText}</span>
+                                </Button>
                             </div>
 
                             <DarkMode />
