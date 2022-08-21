@@ -60,9 +60,6 @@ const ItemDetails = () => {
                                 
                                 <div className="author-bid">
                                     <div className="author-item">
-                                        <div className="avatar">
-                                            <img src={avt2} alt="BestBid" />
-                                        </div>
                                         <div className="infor">
                                             <h6><Link to="/authors">Keith J. Kelley</Link> </h6>
                                             <div className="create">Creator</div>
