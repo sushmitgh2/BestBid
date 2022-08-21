@@ -68,6 +68,7 @@ contract BestBid{
         return auctionCount -1;
     } 
 
+
     function createToken(string memory token_name, string memory tokenUri) external returns (uint){
         uint tokenId =  BBN.createToken(msg.sender, tokenUri);
 
