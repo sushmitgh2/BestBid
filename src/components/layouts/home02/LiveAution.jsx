@@ -3,9 +3,94 @@ import { Link } from 'react-router-dom'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Scrollbar, A11y , Grid } from 'swiper';
 import Countdown from "react-countdown";
+import { useState, useEffect } from 'react';
+import { ethers } from 'ethers'
+import { sequence } from '0xsequence'
+
+import bestBidJson from '../../../build/BestBid.json';
+import bestBidNFTJson from '../../../build/BestBidNFT.json';
+
+import { ETHAuth, Proof } from '@0xsequence/ethauth'
+
+const walletAppURL = 'https://sequence.app';
+const network = 80001;
+sequence.initWallet(network, { walletAppURL });
 
 const LiveAution = props => {
-    const data = props.data;
+
+    const [data, setData] = useState([]); 
+
+    const [account, setAccount] = useState();
+
+    const BestBidCoreAddress = "0x2f91C03e4100c724ed1443eBf61515BdaF4Ded36";
+    const BestBidNFTAddress = "0x918044E27E7A509FF20C457336cfcDbFd542404c";
+
+    var bestBidCore, bestBidNFT;
+
+    useEffect(() => {
+        
+        async function load() {
+            const wallet = sequence.getWallet();
+
+            if(!wallet.isConnected())
+                await wallet.connect({app: "BestBid"});
+
+            const signer = wallet.getSigner();
+
+            bestBidCore = new ethers.Contract(BestBidCoreAddress, bestBidJson.abi, signer);
+
+            bestBidNFT = new ethers.Contract(BestBidNFTAddress, bestBidNFTJson.abi, signer);
+
+            getAccounts();
+            loadData();
+        }
+
+        async function loadData() {
+            setData([]);
+            const ftauction1 = await bestBidCore.getAuction(2)
+            const f1auction1creator = await bestBidCore.getAuctionCreator(2);
+
+            const ftauction2 = await bestBidCore.getAuction(3)
+            const ftauction2creator = await bestBidCore.getAuctionCreator(3);
+            
+            var str_add1 = f1auction1creator.substring(0, 8) +"..."+f1auction1creator.substring(34, 42)
+            var str_add2 = ftauction2creator.substring(0, 8) +"..."+ftauction2creator.substring(34, 42)
+            
+            console.log(ftauction1);
+            console.log(ftauction2);
+
+            setData([...data, {
+                img: "https://"+ftauction1[2]+".ipfs.nftstorage.link",
+                title: ftauction1[0],
+                imgAuthor: "",
+                name: str_add1,
+                price: 'Your choice',
+                auctionId: 2
+            }, {
+                img: "https://"+ftauction2[2]+".ipfs.nftstorage.link",
+                title: ftauction2[0],
+                imgAuthor: "",
+                name: str_add2,
+                price: 'Your choice',
+                auctionId: 3
+            }
+            ]);
+        }
+
+        load();
+    }, []);
+
+    const getAccounts = async () => {
+        const wallet = sequence.getWallet()
+    
+        console.log('getAddress():', await wallet.getAddress())
+
+        setAccount(wallet.getAddress());
+    
+        const provider = wallet.getProvider()
+        console.log('accounts:', await provider.listAccounts())
+    }
+
   return (
     <section className="live-autions tf-section bg-body">
         <div className="container">
@@ -69,21 +154,14 @@ const LiveAutionItem = props => (
     <div className="sc-product-item style-7 flex">
     <div className="product-img">
         <img src={props.item.img} alt="BestBid" />
-        <div className="countdown">
-        <Countdown date={Date.now() + 500000000}>
-            <span>You are good to go!</span>
-        </Countdown>
-        </div>
-        <Link to="/connect-wallet"
+        <Link to="/place_bid" params={{id: props.item.auctionId}}
             className="sc-button style letter"><span>Place Bid</span></Link>
     </div>
     <div className="product-content">
         
         <h5 className="title"><Link to="/item-details">{props.item.title}</Link> </h5>
         <div className="product-author flex">
-            <div className="avatar">
-                <img src={props.item.imgAuthor} alt="BestBid" />
-            </div>
+            
             <div className="infor">
                 <div className="author-name"><Link to="/authors">{props.item.name}</Link></div>
                 <span>Creator</span>

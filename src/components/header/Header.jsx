@@ -15,7 +15,7 @@ import { Button } from 'react-bootstrap';
 
 const walletAppURL = 'https://sequence.app';
 const network = 'polygon';
-sequence.initWallet(network, { walletAppURL });
+sequence.initWallet(80001, { walletAppURL });
 
 const Header = () => {
 
@@ -68,7 +68,7 @@ const Header = () => {
         const wallet = sequence.getWallet()
 
         const connectDetails = await wallet.connect({
-        app: 'Demo Dapp',
+        app: 'BestBid',
         authorize,
         })
 

@@ -37,6 +37,11 @@ contract BestBid{
     mapping(uint => Auction) auctions;
     mapping(uint => Token) tokens;
 
+    Auction[] auctionsArr;
+
+    event TokenCreated(uint indexed token);
+    event AuctionCreated(uint indexed auction);
+
     modifier onlyModerator{
         require(msg.sender == moderator);
         _;
@@ -65,9 +70,10 @@ contract BestBid{
         auc.token = _token;
 
         auctionCount += 1;
+
+        emit AuctionCreated(auctionCount-1);
         return auctionCount -1;
     } 
-
 
     function createToken(string memory token_name, string memory tokenUri) external returns (uint){
         uint tokenId =  BBN.createToken(msg.sender, tokenUri);
@@ -76,6 +82,7 @@ contract BestBid{
         token.tokenId = tokenId;
         token.name = token_name;
 
+        emit TokenCreated(tokenId);
         return tokenId;
     }
 
@@ -135,6 +142,17 @@ contract BestBid{
 
     function getAllBids(uint auctionId) external view returns(Bid[] memory){
         return auctions[auctionId].allBids;
+    }
+
+    function getAuctionCreator(uint auctionId) external view returns(address) {
+        return auctions[auctionId].creator;
+    }
+
+    function getAuction(uint auctionID) external view returns (string[3] memory) {
+        Auction storage auc = auctions[auctionID];
+        string[3] memory auctionDetails = [auc.name, auc.description, BBN.tokenURI(auc.token)];
+
+        return auctionDetails;
     }
 
 }

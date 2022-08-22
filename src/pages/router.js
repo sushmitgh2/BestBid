@@ -8,7 +8,7 @@ const routes = [
     { path: '/', component: <Home02 />},
     { path: '/explore-02', component: <Explore02 />},
     { path: '/item-details', component: <ItemDetails />},
-    { path: '/connect-wallet', component: <ConnectWallet />},
+    { path: '/place_bid/', component: <ConnectWallet />},
     { path: '/create-item', component: <CreateItem />},
 ]
 

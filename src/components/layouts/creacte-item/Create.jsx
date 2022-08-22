@@ -6,13 +6,18 @@ import { Web3Storage } from 'web3.storage';
 import { ethers } from 'ethers';
 import bestBidJson from '../../../build/BestBid.json';
 import bestBidNFTJson from '../../../build/BestBidNFT.json';
+import { sequence } from '0xsequence';
+import { NFTStorage } from 'nft.storage';
 
+const walletAppURL = 'https://sequence.app';
+const network = 80001;
+sequence.initWallet(network, { walletAppURL });
 
 const Create = () => {
 
-    const WEB3STORAGE_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDg4Q0ZDNDAwQkRFMDMyRUZjRDE1OEVDQkFDMEJmNzBCQTY5ZUZiYjQiLCJpc3MiOiJ3ZWIzLXN0b3JhZ2UiLCJpYXQiOjE2NjEwODU4NjE5ODYsIm5hbWUiOiJCZXN0QmlkIn0.ykzR2IHWZWAzRRlhghTCQNRYqZMTgJRdz35k6yZcK3k";
-    const BestBidCoreAddress = "0xF3C9eBDE676A041Ef4B6725F511D00942ee07d95";
-    const BestBidNFTAddress = "0x795A5291643354a371FCeb5ae770c2A821920839";
+    const NFT_STORAGE_TOKEN= "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweEQ4ZWY0RGY5ZDhFNjY1MWEwNTFBMzQxYjRGNDMzM0ZERWRmNjIyOTAiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTY2MTE1OTAxNTA5NiwibmFtZSI6IkJlc3RCaWQifQ.ibUMGQjFnySLmfPSNihi7HuEuUHBn_lGvs5a1dJTp-k";
+    const BestBidCoreAddress = "0x2f91C03e4100c724ed1443eBf61515BdaF4Ded36";
+    const BestBidNFTAddress = "0x918044E27E7A509FF20C457336cfcDbFd542404c";
 
 
     const [itemName, setItemName] = useState("");
@@ -28,6 +33,53 @@ const Create = () => {
     var bestBidCore, bestBidNFT;
 
     useEffect(() => {
+        
+        async function load() {
+          if(window.ethereum) {
+            //await window.ethereum.enable();
+
+            /*const provider = new ethers.providers.Web3Provider(ethereum);
+            const signer = provider.getSigner();
+            console.log(signer);*/
+            const wallet = sequence.getWallet();
+            const signer = wallet.getSigner();
+
+            bestBidCore = new ethers.Contract(BestBidCoreAddress, bestBidJson.abi, signer);
+
+            bestBidNFT = new ethers.Contract(BestBidNFTAddress, bestBidNFTJson.abi, signer);
+            
+            /*const accounts = await ethereum.request({method: 'eth_accounts'});
+            
+            if(accounts.length !== 0) {
+                var account = accounts[0];
+                setAccount(account);
+                console.log("Account: " + account)
+            }*/
+
+            getAccounts();
+            
+          }
+        }
+
+        async function loadData() {
+
+        }
+
+        load();
+    }, []);
+
+    const getAccounts = async () => {
+        const wallet = sequence.getWallet()
+    
+        console.log('getAddress():', await wallet.getAddress())
+
+        setAccount(wallet.getAddress());
+    
+        const provider = wallet.getProvider()
+        console.log('accounts:', await provider.listAccounts())
+    }
+
+    /*useEffect(() => {
         
         async function load() {
           if(window.ethereum) {
@@ -53,28 +105,63 @@ const Create = () => {
         }
         
         load();
-    }, []);
-
-    function getAccessToken () {
-        return WEB3STORAGE_TOKEN
-    }
-    
-    function makeStorageClient () {
-        return new Web3Storage({ token: getAccessToken() })
-    }
+    }, []);*/
 
     async function storeFilesAndMint (e) {
         e.preventDefault();
 
         console.log(file);
-        const client = makeStorageClient()
-        const cid = await client.put([file])
+
+        const nftstorage = new NFTStorage({token: NFT_STORAGE_TOKEN});
+        const data = await nftstorage.store({
+            image: file, 
+            name: itemName, 
+            description: desc
+        })
+
+        const cid = data.ipnft;
+
         console.log('stored files with cid:', cid)
         setCid(cid);
 
-        let mintTxn = await bestBidCore.createToken(itemName, cid);
+        const wallet = sequence.getWallet()
+        const signer = wallet.getSigner();
+
+        const tx = {
+            to: BestBidCoreAddress,
+            from: wallet.getAddress(),
+            data: new ethers.utils.Interface(bestBidJson.abi).encodeFunctionData('createToken', [itemName, cid])
+        }
 
         console.log("Minting token. Please wait...");
+        const txnResp = await signer.sendTransaction(tx);
+        console.log(txnResp);
+
+        await txnResp.wait();
+        console.log(txnResp.receipt);
+
+        //const tokenID = parseInt(txnResp.receipt['logs'][0]['topics'][3], 16);
+
+        //alert("You token has been created with Token Id = " + tokenID);
+
+        alert("You will be requested to create a listing now");
+
+        const txAuc = {
+            to: BestBidCoreAddress,
+            from: wallet.getAddress(),
+            data: new ethers.utils.Interface(bestBidJson.abi).encodeFunctionData('createAuction', [itemName+" Auction", desc, 9])
+        }
+
+        const txnAucResp = await signer.sendTransaction(txAuc);
+        console.log(txnAucResp);
+
+        await txnAucResp.wait();
+
+        console.log(txnAucResp.receipt);
+
+        /*let mintTxn = await bestBidCore.createToken(itemName, cid);
+
+        
         const txnReceipt = await mintTxn.wait();
 
         console.log(txnReceipt);
@@ -98,7 +185,7 @@ const Create = () => {
         console.log(auctionID);
         console.log(listTxn.hash);
 
-        alert("You auction has been created with Auction Id = " + auctionID);
+        alert("You auction has been created with Auction Id = " + auctionID);*/
     }
 
     return (
