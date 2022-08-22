@@ -60,14 +60,14 @@ const LiveAution = props => {
             console.log(ftauction2);
 
             setData([...data, {
-                img: "https://"+ftauction1[2]+".ipfs.nftstorage.link",
+                img: "https://bafkreibrrn2bbxotpb3j6ilzcbi3xtsaxs27p65arwzcuccjfoa6ofr5mu.ipfs.nftstorage.link/",
                 title: ftauction1[0],
                 imgAuthor: "",
                 name: str_add1,
                 price: 'Your choice',
                 auctionId: 2
             }, {
-                img: "https://"+ftauction2[2]+".ipfs.nftstorage.link",
+                img: "https://bafkreibomzr2tmho35g4q344xwcmt5nddb7emucfohl6jfbrindrhfijvm.ipfs.nftstorage.link/",
                 title: ftauction2[0],
                 imgAuthor: "",
                 name: str_add2,
